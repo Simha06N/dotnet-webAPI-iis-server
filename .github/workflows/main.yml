@@ -46,7 +46,7 @@ jobs:
         # Check if the application pool exists and is running
         $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
         if ($appPool -ne $null -and $appPool.Value -eq "Started") {
-          Stop-WebAppPool -Name $appPoolName
+          Start-Process powershell -ArgumentList "Stop-WebAppPool -Name $appPoolName" -Verb RunAs
           echo "Stopped application pool: $appPoolName"
         } else {
           echo "Application pool $appPoolName is not running or doesn't exist."
@@ -55,7 +55,7 @@ jobs:
         # Check if the website exists and is running
         $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
         if ($website -ne $null -and $website.State -eq "Started") {
-          Stop-Website -Name $websiteName
+          Start-Process powershell -ArgumentList "Stop-Website -Name $websiteName" -Verb RunAs
           echo "Stopped website: $websiteName"
         } else {
           echo "Website $websiteName is not running or doesn't exist."
