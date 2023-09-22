@@ -3,7 +3,7 @@ name: Deployment Pipeline
 on:
   push:
     branches:
-      - develop  # Change to your branch
+      - develop  # Change to your branchs
 
 jobs:
   api-deployment:
