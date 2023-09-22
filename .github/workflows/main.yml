@@ -40,8 +40,8 @@ jobs:
     - name: Stop App Pool and Website
       run: |
         # Stop a specific application pool and website in IIS
-        $appPoolName = ${{ secrets.YOURAPPPOOLNAME }}
-        $websiteName = ${{ secrets.YOURWEBSITENAME }}
+        $appPoolName = "SampleAPI"
+        $websiteName = "SampleAPI"
         
         # Check if the application pool exists and is running
         $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
