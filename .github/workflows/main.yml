@@ -100,6 +100,26 @@ jobs:
 
     - name: Restart App Pool and Website
       run: |
-        iisreset /start
+        # Start a specific application pool and website in IIS
+        $appPoolName = "WeatherAppService"
+        $websiteName = "WeatherAppService"
+        
+        # Check if the application pool exists and is running
+        $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
+        if ($appPool -ne $null -and $appPool.Value -eq "Stopped") {
+          Start-WebAppPool -Name $appPoolName
+          echo "Started application pool: $appPoolName"
+        } else {
+          echo "Application pool $appPoolName is running....."
+        }
+
+        # Check if the website exists and is running
+        $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
+        if ($website -ne $null -and $website.State -eq "Stopped") {
+          Start-Website -Name $websiteName
+          echo "Started website: $websiteName"
+        } else {
+          echo "Website $websiteName is running....."
+        }
 
     # Add steps for artifact publishing, creating a release, and interacting with your CD pipeline
