@@ -37,46 +37,22 @@ jobs:
         Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
         echo "Backup completed to $backupFolder"
 
-    - name: Configure GitHub Actions Runner
-      run: |
-        # Download svcmanager.exe from GitHub Actions runner repository releases
-        Invoke-WebRequest -Uri "https://github.com/actions/runner/releases/latest/download/svcmanager.exe" -OutFile "C:\actions-runner\svcmanager.exe"
-
-        # Configure the runner to run as an administrator
-        cd C:\actions-runner
-        .\svcmanager.exe configure
-      continue-on-error: true  # Continue even if the configure command fails
-
-    - name: Restart GitHub Actions Runner Service
-      run: |
-        # Restart the GitHub Actions runner service
-        cd C:\actions-runner
-        .\svcmanager.exe restart
-      continue-on-error: true  # Continue even if the restart command fails
-
     - name: Stop App Pool and Website
       run: |
-        # Stop a specific application pool and website in IIS with elevated privileges
-        $appPoolName = ${{ secrets.YourAppPoolName }}
-        $websiteName = ${{ secrets.YourWebsiteName }}
-
-        # Check if the application pool exists and is running
-        $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
-        if ($appPool -ne $null -and $appPool.Value -eq "Started") {
-          Start-Process powershell -ArgumentList "Stop-WebAppPool -Name $appPoolName" -Verb RunAs
-          echo "Stopped application pool: $appPoolName"
-        } else {
-          echo "Application pool $appPoolName is not running or doesn't exist."
-        }
-
-        # Check if the website exists and is running
+        # Stop the App pool and website in IIS
+        iisreset /stop
+        # Wait for a moment to allow IIS services to stop (adjust the sleep duration as needed)
+        Start-Sleep -Seconds 10
+  
+        # Check if the website is stopped
+        $websiteName = 'YourWebsiteName'
         $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
-        if ($website -ne $null -and $website.State -eq "Started") {
-          Start-Process powershell -ArgumentList "Stop-Website -Name $websiteName" -Verb RunAs
-          echo "Stopped website: $websiteName"
+        if ($website -ne $null -and $website.State -eq 'Stopped') {
+            Write-Host 'Website is stopped.'
         } else {
-          echo "Website $websiteName is not running or doesn't exist."
+          Write-Host 'Website is not stopped or doesn't exist.'
         }
+      continue-on-error: true
     
     - name: Build API
       run: |
