@@ -43,16 +43,6 @@ jobs:
         iisreset /stop
         # Wait for a moment to allow IIS services to stop (adjust the sleep duration as needed)
         Start-Sleep -Seconds 10
-  
-        # Check if the website is stopped
-        $websiteName = 'YourWebsiteName'
-        $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
-        if ($website -ne $null -and $website.State -eq 'Stopped') {
-            Write-Host 'Website is stopped.'
-        } else {
-          Write-Host 'Website is not stopped or doesn't exist.'
-        }
-      continue-on-error: true
     
     - name: Build API
       run: |
