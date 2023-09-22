@@ -7,7 +7,7 @@ on:
 
 jobs:
   api-deployment:
-    runs-on: windows-latest
+    runs-on: EC2AMAZ-C4LULBE
 
     steps:
     - name: Checkout Repository
