@@ -1,79 +1,67 @@
-name: Deployment Pipeline
+name: Build and Deploy
 
 on:
   push:
     branches:
-      - develop  # Change to your branchs
+      - devenv  # Change this to the default branch of your repository
 
 jobs:
-  api-deployment:
-    runs-on: win2022-server
+  build:
+    runs-on: windows-latest
 
     steps:
-    - name: Checkout Repository
+    - name: Checkout code
       uses: actions/checkout@v2
 
-    - name: Set Timestamp Variable
-      id: set-timestamp
-      run: |
-        # Generate a timestamp to create a unique backup folder
-        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
-        echo "Timestamp: $timestamp"
-        echo "::set-output name=timestamp::$timestamp"
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x  # Change this to the .NET version you need
 
-    - name: Checking User Name
-      run: |
-        # Create a unique backup folder based on the timestamp
-         whoami
-        
-    - name: Create Unique Backup Folder
-      run: |
-        # Create a unique backup folder based on the timestamp
-        $timestamp = $env:TIMESTAMP
-        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
-        New-Item -Path $backupFolder -ItemType Directory -Force
-        echo "Backup folder created: $backupFolder"
-
-    - name: Backup API Deployment Folder
-      run: |
-        # Copye the existing deployment folder to the unique backup folder
-        $timestamp = $env:TIMESTAMP
-        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
-        Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
-        echo "Backup completed to $backupFolder"
-
-    - name: Stop App Pool and Website
-      run: |
-        # Stop the App pool and website in IIS
-        iisreset /stop
-        # Wait for a moment to allow IIS services to stop (adjust the sleep duration as needed)
-        Start-Sleep -Seconds 10
-    
     - name: Build API
       run: |
-        cd path/to/your/api/project
-        dotnet build --configuration Release
+        pwd
+        # Add your build commands here
+        dotnet build -c Release
+      working-directory: path/to/api  # Change to the API project folder
 
-    - name: Replace DLLs
+    - name: Build Service
       run: |
-        robocopy path/to/your/api/project/bin/Release/net6.0/publish C:\SampleAPP /MIR
+        # Add your build commands here
+        msbuild /t:Build /p:Configuration=Release
+      working-directory: path/to/service  # Change to the service project folder
 
-    - name: Check for Deployment Issues and Rollback
+    - name: Publish Artifacts
+      uses: actions/upload-artifact@v2
+      with:
+        name: artifacts
+        path: |
+          path/to/api/bin/Release
+          path/to/service/bin/Release
+
+  deploy:
+    needs: build
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v2
+
+    - name: Download Artifacts
+      uses: actions/download-artifact@v2
+      with:
+        name: artifacts
+
+    - name: Deploy API
       run: |
-        # Check for deployment issues (e.g., check for a specific file's existence)
-        if (-not (Test-Path "C:\SampleAPP\YourFile.dll")) {
-          echo "Deployment issues detected. Rolling back..."
-          $timestamp = $env:TIMESTAMP
-          $backupFolder = "C:\Backup\SampleAPP\$timestamp"
-          Copy-Item -Path $backupFolder\* -Destination "C:\SampleAPP" -Recurse -Force  # Restore backup
-          iisreset /start  # Restart app pool and website
-          exit 1  # Exit with an error code to indicate the deployment failed
-        } else {
-          echo "Deployment successful."
-        }
+        # Add your deployment script for the API here
+        # e.g., PowerShell or batch script
+        # Example: .\deploy-api.ps1
+      working-directory: path/to/api
 
-    - name: Restart App Pool and Website
+    - name: Deploy Service
       run: |
-        iisreset /start
-
-    # Add steps for artifact publishing, creating a release, and interacting with your CD pipeline
+        # Add your deployment script for the service here
+        # e.g., PowerShell or batch script
+        # Example: .\deploy-service.ps1
+      working-directory: path/to/service
