@@ -39,8 +39,27 @@ jobs:
 
     - name: Stop App Pool and Website
       run: |
-        # Stop the App pool and website in IIS
-        iisreset /stop
+        # Stop a specific application pool and website in IIS
+        $appPoolName = ${{ secrets.YOURAPPPOOLNAME }}
+        $websiteName = ${{ secrets.YOURWEBSITENAME }}
+        
+        # Check if the application pool exists and is running
+        $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
+        if ($appPool -ne $null -and $appPool.Value -eq "Started") {
+          Stop-WebAppPool -Name $appPoolName
+          echo "Stopped application pool: $appPoolName"
+        } else {
+          echo "Application pool $appPoolName is not running or doesn't exist."
+        }
+
+        # Check if the website exists and is running
+        $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
+        if ($website -ne $null -and $website.State -eq "Started") {
+          Stop-Website -Name $websiteName
+          echo "Stopped website: $websiteName"
+        } else {
+          echo "Website $websiteName is not running or doesn't exist."
+        }
 
     - name: Build API
       run: |
