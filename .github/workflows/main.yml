@@ -77,17 +77,17 @@ jobs:
     - name: Build API
       run: |
         
-        dotnet build --configuration Release
+        dotnet build WeatherAPP.csproj --configuration Release
 
     - name: Replace DLLs
       run: |
-        #robocopy ./bin/Release/net6.0/publish C:\SampleAPP /MIR
-        dotnet publish -c Release -o C:\SampleAPP
+        robocopy ./bin/Release/net6.0/publish C:\SampleAPP /MIR
+        #dotnet publish -c Release -o C:\SampleAPP
 
     - name: Check for Deployment Issues and Rollback
       run: |
         # Check for deployment issues (e.g., check for a specific file's existence)
-        if (-not (Test-Path "C:\SampleAPP\YourFile.dll")) {
+        if (-not (Test-Path "C:\SampleAPP\WeatherAPP.dll")) {
           echo "Deployment issues detected. Rolling back..."
           $timestamp = $env:TIMESTAMP
           $backupFolder = "C:\Backup\SampleAPP\$timestamp"
