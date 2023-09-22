@@ -81,7 +81,8 @@ jobs:
 
     - name: Replace DLLs
       run: |
-        robocopy ./bin/Release/net6.0/publish C:\SampleAPP /MIR
+        #robocopy ./bin/Release/net6.0/publish C:\SampleAPP /MIR
+        dotnet publish -c Release -o C:\SampleAPP
 
     - name: Check for Deployment Issues and Rollback
       run: |
