@@ -51,9 +51,10 @@ jobs:
 
     - name: Stop App Pool and Website
       run: |
+        whoami
         # Stop a specific application pool and website in IIS
         $appPoolName = "WeatherAppService"
-        $websiteName = ${{ secrets.YOURWEBSITENAME }}
+        $websiteName = "WeatherAppService"
         
         # Check if the application pool exists and is running
         $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
