@@ -3,7 +3,7 @@ name: Deployment Pipeline
 on:
   push:
     branches:
-      - develop  # Change this to your main branch
+      - develop  # Change to your branch
 
 jobs:
   api-deployment:
@@ -13,19 +13,33 @@ jobs:
     - name: Checkout Repository
       uses: actions/checkout@v2
 
-    - name: Create Unique Backup Folder
+    - name: Set Timestamp Variable
+      id: set-timestamp
       run: |
         # Generate a timestamp to create a unique backup folder
-        set TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
-        mkdir C:\Backup\SampleAPP_%TIMESTAMP%
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        echo "Timestamp: $timestamp"
+        echo "::set-output name=timestamp::$timestamp"
+
+    - name: Create Unique Backup Folder
+      run: |
+        # Create a unique backup folder based on the timestamp
+        $timestamp = $env:TIMESTAMP
+        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+        New-Item -Path $backupFolder -ItemType Directory -Force
+        echo "Backup folder created: $backupFolder"
 
     - name: Backup API Deployment Folder
       run: |
         # Copy the existing deployment folder to the unique backup folder
-        robocopy C:\SampleAPP C:\Backup\SampleAPP\%TIMESTAMP% /MIR
+        $timestamp = $env:TIMESTAMP
+        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+        Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
+        echo "Backup completed to $backupFolder"
 
     - name: Stop App Pool and Website
       run: |
+        # Stop the App pool and website in IIS
         iisreset /stop
 
     - name: Build API
@@ -40,14 +54,16 @@ jobs:
     - name: Check for Deployment Issues and Rollback
       run: |
         # Check for deployment issues (e.g., check for a specific file's existence)
-        if [ ! -f C:\SampleAPP\YourFile.dll ]; then
+        if (-not (Test-Path "C:\SampleAPP\YourFile.dll")) {
           echo "Deployment issues detected. Rolling back..."
-          robocopy C:\Backup\SampleAPP\%TIMESTAMP% C:\SampleAPP /MIR  # Restore backup
+          $timestamp = $env:TIMESTAMP
+          $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+          Copy-Item -Path $backupFolder\* -Destination "C:\SampleAPP" -Recurse -Force  # Restore backup
           iisreset /start  # Restart app pool and website
           exit 1  # Exit with an error code to indicate the deployment failed
-        else
+        } else {
           echo "Deployment successful."
-        fi
+        }
 
     - name: Restart App Pool and Website
       run: |
