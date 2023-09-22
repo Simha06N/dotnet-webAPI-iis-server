@@ -1,0 +1,56 @@
+name: Deployment Pipeline
+
+on:
+  push:
+    branches:
+      - develop  # Change this to your main branch
+
+jobs:
+  api-deployment:
+    runs-on: windows-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v2
+
+    - name: Create Unique Backup Folder
+      run: |
+        # Generate a timestamp to create a unique backup folder
+        set TIMESTAMP=%date:~10,4%%date:~4,2%%date:~7,2%_%time:~0,2%%time:~3,2%%time:~6,2%
+        mkdir C:\Backup\SampleAPP_%TIMESTAMP%
+
+    - name: Backup API Deployment Folder
+      run: |
+        # Copy the existing deployment folder to the unique backup folder
+        robocopy C:\SampleAPP C:\Backup\SampleAPP\%TIMESTAMP% /MIR
+
+    - name: Stop App Pool and Website
+      run: |
+        iisreset /stop
+
+    - name: Build API
+      run: |
+        cd path/to/your/api/project
+        dotnet build --configuration Release
+
+    - name: Replace DLLs
+      run: |
+        robocopy path/to/your/api/project/bin/Release/net6.0/publish C:\SampleAPP /MIR
+
+    - name: Check for Deployment Issues and Rollback
+      run: |
+        # Check for deployment issues (e.g., check for a specific file's existence)
+        if [ ! -f C:\SampleAPP\YourFile.dll ]; then
+          echo "Deployment issues detected. Rolling back..."
+          robocopy C:\Backup\SampleAPP\%TIMESTAMP% C:\SampleAPP /MIR  # Restore backup
+          iisreset /start  # Restart app pool and website
+          exit 1  # Exit with an error code to indicate the deployment failed
+        else
+          echo "Deployment successful."
+        fi
+
+    - name: Restart App Pool and Website
+      run: |
+        iisreset /start
+
+    # Add steps for artifact publishing, creating a release, and interacting with your CD pipeline
