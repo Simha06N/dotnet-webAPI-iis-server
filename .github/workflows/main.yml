@@ -76,13 +76,12 @@ jobs:
     
     - name: Build API
       run: |
-        pwd
-        cd path/to/your/api/project
+        
         dotnet build --configuration Release
 
     - name: Replace DLLs
       run: |
-        robocopy path/to/your/api/project/bin/Release/net6.0/publish C:\SampleAPP /MIR
+        robocopy ./bin/Release/net6.0/publish C:\SampleAPP /MIR
 
     - name: Check for Deployment Issues and Rollback
       run: |
