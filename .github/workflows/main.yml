@@ -42,15 +42,40 @@ jobs:
         Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
         echo "Backup completed to $backupFolder"
 
+#    - name: Stop App Pool and Website
+# #     run: |
+#        # Stop the App pool and website in IIS
+##        iisreset /stop
+#        # Wait for a moment to allow IIS services to stop (adjust the sleep duration as needed)
+#        Start-Sleep -Seconds 10
+
     - name: Stop App Pool and Website
       run: |
-        # Stop the App pool and website in IIS
-        iisreset /stop
-        # Wait for a moment to allow IIS services to stop (adjust the sleep duration as needed)
-        Start-Sleep -Seconds 10
+        # Stop a specific application pool and website in IIS
+        $appPoolName = "WeatherAppService"
+        $websiteName = ${{ secrets.YOURWEBSITENAME }}
+        
+        # Check if the application pool exists and is running
+        $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
+        if ($appPool -ne $null -and $appPool.Value -eq "Started") {
+          Stop-WebAppPool -Name $appPoolName
+          echo "Stopped application pool: $appPoolName"
+        } else {
+          echo "Application pool $appPoolName is not running or doesn't exist."
+        }
+
+        # Check if the website exists and is running
+        $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
+        if ($website -ne $null -and $website.State -eq "Started") {
+          Stop-Website -Name $websiteName
+          echo "Stopped website: $websiteName"
+        } else {
+          echo "Website $websiteName is not running or doesn't exist."
+        }
     
     - name: Build API
       run: |
+        pwd
         cd path/to/your/api/project
         dotnet build --configuration Release
 
