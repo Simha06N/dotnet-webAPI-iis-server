@@ -21,6 +21,11 @@ jobs:
         echo "Timestamp: $timestamp"
         echo "::set-output name=timestamp::$timestamp"
 
+    - name: Checking User Name
+      run: |
+        # Create a unique backup folder based on the timestamp
+         whoami
+        
     - name: Create Unique Backup Folder
       run: |
         # Create a unique backup folder based on the timestamp
