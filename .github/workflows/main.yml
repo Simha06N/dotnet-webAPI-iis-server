@@ -3,7 +3,7 @@ name: Deployment Pipeline
 on:
   push:
     branches:
-      - develop  # Change to your branchs
+      - folder-creation  # Change to your branchs
 
 jobs:
   api-deployment:
@@ -48,13 +48,15 @@ jobs:
          } else {
            echo "Backup folder already exists: $backupFolder"
          }
+         echo "BACKUP_FOLDER=$backupFolder" >> $GITHUB_ENV
+         echo "$GITHUB_ENV" 
       continue-on-error: true  # Continue even if the folder creation fails
 
     - name: Backup API Deployment Folder
       run: |
         # Copye the existing deployment folder to the unique backup folder
         $timestamp = $env:TIMESTAMP
-        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+        $backupFolder = $env:BACKUP_FOLDER
         Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
         echo "Backup completed to $backupFolder"
 
@@ -65,78 +67,78 @@ jobs:
 #        # Wait for a moment to allow IIS services to stop (adjust the sleep duration as needed)
 #        Start-Sleep -Seconds 10
 
-    - name: Stop App Pool and Website
-      run: |
-        whoami
-        # Stop a specific application pool and website in IIS
-        $appPoolName = "WeatherAppService"
-        $websiteName = "WeatherAppService"
+    # - name: Stop App Pool and Website
+    #   run: |
+    #     whoami
+    #     # Stop a specific application pool and website in IIS
+    #     $appPoolName = "WeatherAppService"
+    #     $websiteName = "WeatherAppService"
         
-        # Check if the application pool exists and is running
-        $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
-        if ($appPool -ne $null -and $appPool.Value -eq "Started") {
-          Stop-WebAppPool -Name $appPoolName
-          echo "Stopped application pool: $appPoolName"
-        } else {
-          echo "Application pool $appPoolName is not running or doesn't exist."
-        }
+    #     # Check if the application pool exists and is running
+    #     $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
+    #     if ($appPool -ne $null -and $appPool.Value -eq "Started") {
+    #       Stop-WebAppPool -Name $appPoolName
+    #       echo "Stopped application pool: $appPoolName"
+    #     } else {
+    #       echo "Application pool $appPoolName is not running or doesn't exist."
+    #     }
 
-        # Check if the website exists and is running
-        $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
-        if ($website -ne $null -and $website.State -eq "Started") {
-          Stop-Website -Name $websiteName
-          echo "Stopped website: $websiteName"
-        } else {
-          echo "Website $websiteName is not running or doesn't exist."
-        }
+    #     # Check if the website exists and is running
+    #     $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
+    #     if ($website -ne $null -and $website.State -eq "Started") {
+    #       Stop-Website -Name $websiteName
+    #       echo "Stopped website: $websiteName"
+    #     } else {
+    #       echo "Website $websiteName is not running or doesn't exist."
+    #     }
     
-    - name: Build API
-      run: |
-        dotnet --info
-        ls
-        dotnet build WeatherAPP.csproj --configuration Release
+    # - name: Build API
+    #   run: |
+    #     dotnet --info
+    #     ls
+    #     dotnet build WeatherAPP.csproj --configuration Release
 
-    - name: Replace DLLs
-      run: |
-        #robocopy ./bin/Release/net6.0/ C:\SampleAPP /MIR
-        dotnet publish -c Release -o C:\SampleAPP
+    # - name: Replace DLLs
+    #   run: |
+    #     #robocopy ./bin/Release/net6.0/ C:\SampleAPP /MIR
+    #     dotnet publish -c Release -o C:\SampleAPP
 
-    - name: Check for Deployment Issues and Rollback
-      run: |
-        # Check for deployment issues (e.g., check for a specific file's existence)
-        if (-not (Test-Path "C:\SampleAPP\WeatherAPP.dll")) {
-          echo "Deployment issues detected. Rolling back..."
-          $timestamp = $env:TIMESTAMP
-          $backupFolder = "C:\Backup\SampleAPP\$timestamp"
-          Copy-Item -Path $backupFolder\* -Destination "C:\SampleAPP" -Recurse -Force  # Restore backup
-          iisreset /start  # Restart app pool and website
-          exit 1  # Exit with an error code to indicate the deployment failed
-        } else {
-          echo "Deployment successful."
-        }
+    # - name: Check for Deployment Issues and Rollback
+    #   run: |
+    #     # Check for deployment issues (e.g., check for a specific file's existence)
+    #     if (-not (Test-Path "C:\SampleAPP\WeatherAPP.dll")) {
+    #       echo "Deployment issues detected. Rolling back..."
+    #       $timestamp = $env:TIMESTAMP
+    #       $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+    #       Copy-Item -Path $backupFolder\* -Destination "C:\SampleAPP" -Recurse -Force  # Restore backup
+    #       iisreset /start  # Restart app pool and website
+    #       exit 1  # Exit with an error code to indicate the deployment failed
+    #     } else {
+    #       echo "Deployment successful."
+    #     }
 
-    - name: Restart App Pool and Website
-      run: |
-        # Start a specific application pool and website in IIS
-        $appPoolName = "WeatherAppService"
-        $websiteName = "WeatherAppService"
+    # - name: Restart App Pool and Website
+    #   run: |
+    #     # Start a specific application pool and website in IIS
+    #     $appPoolName = "WeatherAppService"
+    #     $websiteName = "WeatherAppService"
         
-        # Check if the application pool exists and is running
-        $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
-        if ($appPool -ne $null -and $appPool.Value -eq "Stopped") {
-          Start-WebAppPool -Name $appPoolName
-          echo "Started application pool: $appPoolName"
-        } else {
-          echo "Application pool $appPoolName is running....."
-        }
+    #     # Check if the application pool exists and is running
+    #     $appPool = Get-WebAppPoolState -Name $appPoolName -ErrorAction SilentlyContinue
+    #     if ($appPool -ne $null -and $appPool.Value -eq "Stopped") {
+    #       Start-WebAppPool -Name $appPoolName
+    #       echo "Started application pool: $appPoolName"
+    #     } else {
+    #       echo "Application pool $appPoolName is running....."
+    #     }
 
-        # Check if the website exists and is running
-        $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
-        if ($website -ne $null -and $website.State -eq "Stopped") {
-          Start-Website -Name $websiteName
-          echo "Started website: $websiteName"
-        } else {
-          echo "Website $websiteName is running....."
-        }
+    #     # Check if the website exists and is running
+    #     $website = Get-Website -Name $websiteName -ErrorAction SilentlyContinue
+    #     if ($website -ne $null -and $website.State -eq "Stopped") {
+    #       Start-Website -Name $websiteName
+    #       echo "Started website: $websiteName"
+    #     } else {
+    #       echo "Website $websiteName is running....."
+    #     }
 
-    # Add steps for artifact publishing, creating a release, and interacting with your CD pipeline
+    # # Add steps for artifact publishing, creating a release, and interacting with your CD pipeline
