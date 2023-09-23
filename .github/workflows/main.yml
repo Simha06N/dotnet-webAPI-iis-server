@@ -48,15 +48,13 @@ jobs:
          } else {
            echo "Backup folder already exists: $backupFolder"
          }
-        #echo "::set-output name=BACKUP_FOLDER::$backupFolder"
-        echo "BACKUP_FOLDER=$backupFolder" >> $GITHUB_ENV
       continue-on-error: true  # Continue even if the folder creation fails
 
     - name: Backup API Deployment Folder
       run: |
         # Copye the existing deployment folder to the unique backup folder
-        # $timestamp = $env:TIMESTAMP
-        # $backupFolder = ${{ steps.create-backup-folder.outputs.BACKUP_FOLDER }}
+        $timestamp = $env:TIMESTAMP
+        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
         $backupFolder = $env:BACKUP_FOLDER
         Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
         echo "Backup completed to $backupFolder"
