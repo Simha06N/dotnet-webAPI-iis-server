@@ -33,7 +33,7 @@ jobs:
 #        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
 #        New-Item -Path $backupFolder -ItemType Directory -Force
 #        echo "Backup folder created: $backupFolder"
-    - name: Create Unique Backup Folder
+    - name: Create Unique Backup Folder and Backup API Deployment Folder
       run: |
         # Generate a timestamp to create a unique backup folder
         $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
@@ -48,15 +48,11 @@ jobs:
          } else {
            echo "Backup folder already exists: $backupFolder"
          }
-      continue-on-error: true  # Continue even if the folder creation fails
-
-    - name: Backup API Deployment Folder
-      run: |
         # Copye the existing deployment folder to the unique backup folder
-        $timestamp = $env:TIMESTAMP
-        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
         Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
         echo "Backup completed to $backupFolder"
+
+      continue-on-error: true  # Continue even if the folder creation fails
 
 #    - name: Stop App Pool and Website
 # #     run: |
