@@ -56,7 +56,7 @@ jobs:
       run: |
         # Copye the existing deployment folder to the unique backup folder
         # $timestamp = $env:TIMESTAMP
-        # $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+        $backupFolder = ${{ steps.create-backup-folder.outputs.BACKUP_FOLDER }}
         Copy-Item -Path "C:\SampleAPP\*" -Destination $backupFolder -Recurse -Force
         echo "Backup completed to $backupFolder"
 
