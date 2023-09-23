@@ -44,12 +44,12 @@ jobs:
         # Create the backup folder
         if (!(Test-Path -Path $backupFolder -PathType Container)) {
           New-Item -Path $backupFolder -ItemType Directory
-          echo "::set-env name=BACKUP_FOLDER::$backupFolder"
           echo "Backup folder created: $backupFolder"
          } else {
            echo "Backup folder already exists: $backupFolder"
          }
-
+        echo "::set-output name=BACKUP_FOLDER::$backupFolder"
+    
       continue-on-error: true  # Continue even if the folder creation fails
 
     - name: Backup API Deployment Folder
