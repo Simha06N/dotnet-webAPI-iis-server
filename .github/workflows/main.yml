@@ -26,13 +26,30 @@ jobs:
         # Create a unique backup folder based on the timestamp
          whoami
         
+#    - name: Create Unique Backup Folder
+#      run: |
+#        # Create a unique backup folder based on the timestamp
+#        $timestamp = $env:TIMESTAMP
+#        $backupFolder = "C:\Backup\SampleAPP\$timestamp"
+#        New-Item -Path $backupFolder -ItemType Directory -Force
+#        echo "Backup folder created: $backupFolder"
     - name: Create Unique Backup Folder
       run: |
-        # Create a unique backup folder based on the timestamp
-        $timestamp = $env:TIMESTAMP
+        # Generate a timestamp to create a unique backup folder
+        $timestamp = Get-Date -Format "yyyyMMdd_HHmmss"
+        echo "Timestamp: $timestamp"
+        
+        # Define the backup folder path
         $backupFolder = "C:\Backup\SampleAPP\$timestamp"
-        New-Item -Path $backupFolder -ItemType Directory -Force
-        echo "Backup folder created: $backupFolder"
+        # Create the backup folder
+        if (!(Test-Path -Path $backupFolder -PathType Container)) {
+          New-Item -Path $backupFolder -ItemType Directory
+          echo "Backup folder created: $backupFolder"
+         } else {
+           echo "Backup folder already exists: $backupFolder"
+         }
+
+      continue-on-error: true  # Continue even if the folder creation fails
 
     - name: Backup API Deployment Folder
       run: |
